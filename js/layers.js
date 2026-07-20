@@ -20,6 +20,7 @@
     introSetup: { en: "This is YOUR setup from the planner, shown as the real priority stack. Labels and VRAM addresses come from what you assigned; the graphics are placeholders — they live in your game.",
                de: "Das ist DEIN Setup aus dem Planer, dargestellt als echter Prioritäts-Stapel. Labels und VRAM-Adressen kommen aus deiner Belegung; die Grafiken sind Platzhalter — die echten stecken in deinem Spiel." },
     srcDemo: { en: "Demo scene", de: "Demo-Szene" },
+    sceneLbl: { en: "Scenario", de: "Szenario" },
     srcSetup:{ en: "My setup", de: "Mein Setup" },
     mode:    { en: "BG mode", de: "BG-Modus" },
     bg3p:    { en: "BG3 priority (HUD in front)", de: "BG3-Priorität (HUD nach vorn)" },
@@ -73,6 +74,16 @@
          con: { en: "single layer — practically no shipped game used it", de: "eine einzige Ebene — praktisch kein Spiel hat ihn je genutzt" } },
     7: { pro: { en: "rotation & scaling · perspective floors via HDMA on the matrix · 256 colors", de: "Rotation & Skalierung · Perspektiv-Böden per HDMA auf die Matrix · 256 Farben" },
          con: { en: "one layer · fixed 128×128-tile map · no tile flipping · second plane only via EXTBG", de: "eine Ebene · fixe 128×128-Tile-Map · kein Tile-Spiegeln · zweite Ebene nur über EXTBG" } }
+  };
+  var MODE_USES = {
+    0: { en: "Typical: puzzle boards & UI-heavy screens — 4 layers of decoration around a static playfield.", de: "Typisch: Puzzle-Boards & UI-lastige Screens — 4 Deko-Ebenen um ein statisches Spielfeld." },
+    1: { en: "Typical: Super Mario World, Zelda ALttP, Chrono Trigger — and the Final Fantasy BATTLES: backdrop art on BG1/BG2, the blue text box is BG3 (2bpp is plenty for text).", de: "Typisch: Super Mario World, Zelda ALttP, Chrono Trigger — und die Final-Fantasy-KÄMPFE: Hintergrund-Artwork auf BG1/BG2, die blaue Textbox ist BG3 (2bpp reicht für Text locker)." },
+    2: { en: "Typical: special column-scrolling effects (offset-per-tile) — rare.", de: "Typisch: spezielle Spalten-Scroll-Effekte (Offset-per-Tile) — selten." },
+    3: { en: "Typical: title screens, stills, detailed single images with 256 colors.", de: "Typisch: Titelbilder, Standbilder, detailreiche Einzel-Screens mit 256 Farben." },
+    4: { en: "Typical: almost nothing — 256 colors + offset-per-tile never found its game.", de: "Typisch: fast nichts — 256 Farben + Offset-per-Tile hat sein Spiel nie gefunden." },
+    5: { en: "Typical: razor-sharp text menus — Seiken Densetsu 3, RPM Racing.", de: "Typisch: messerscharfe Text-Menüs — Seiken Densetsu 3, RPM Racing." },
+    6: { en: "Typical: practically unused.", de: "Typisch: praktisch ungenutzt." },
+    7: { en: "Typical: F-Zero, Super Mario Kart, Pilotwings — and the Final Fantasy world map, airship & boss zooms.", de: "Typisch: F-Zero, Super Mario Kart, Pilotwings — und die Final-Fantasy-Weltkarte, Luftschiff & Boss-Zooms." }
   };
   var MAP_SIZES = ["32×32", "64×32", "32×64", "64×64"];
 
@@ -203,8 +214,195 @@
     R(g, 128, y, 12, 14, "#f5c542"); R(g, 132, y + 4, 4, 6, "#b98d1e");
   }
 
-  var DRAW = { BD: drawBD, BG4L: drawBG4L, BG3L: drawBG3L, BG3H: drawBG3H, BG2L: drawBG2L,
-               BG1L: drawBG1L, BG1H: drawBG1H, OBJ3: drawOBJ3, OBJ2: drawOBJ2, OBJ0: drawOBJ0 };
+  // ---------- top-down RPG scene (Mode 1, ALttP-style) ----------
+  function topBG2L(g) {
+    R(g, 0, 0, W, H, "#4f9e3f");
+    for (var y = 0; y < H; y += 32) for (var x = 0; x < W; x += 32)
+      if (((x + y) / 32) % 2) R(g, x, y, 32, 32, "#58a848");
+    R(g, 0, 128, W, 20, "#c9a86a"); R(g, 0, 127, W, 1, "#8a6a3a"); R(g, 0, 148, W, 1, "#8a6a3a"); // path E-W
+    R(g, 118, 0, 20, H, "#c9a86a"); R(g, 117, 0, 1, H, "#8a6a3a"); R(g, 138, 0, 1, H, "#8a6a3a"); // path N-S
+    R(g, 190, 172, 52, 38, "#3b56c2"); R(g, 196, 178, 40, 26, "#5a7ee0");                          // pond
+    [[16, 40], [96, 172], [230, 60], [60, 96]].forEach(function (f) { R(g, f[0], f[1], 4, 4, "#e5484d"); R(g, f[0]+1, f[1]-3, 2, 3, "#3f7e33"); });
+  }
+  function topBG1L(g) {
+    R(g, 24, 72, 56, 40, "#b98d5a"); R(g, 44, 92, 16, 20, "#5a3d22"); R(g, 30, 80, 12, 10, "#9ecbff"); // house
+    R(g, 152, 76, 12, 20, "#6b4a2b"); R(g, 204, 116, 12, 20, "#6b4a2b");                              // trunks
+    for (var x = 8; x < 104; x += 16) R(g, x, 196, 8, 14, "#8a5a33");                                 // fence
+  }
+  function topBG1H(g) {
+    R(g, 20, 52, 64, 22, "#c23b3b"); R(g, 30, 40, 44, 14, "#c23b3b");                                 // roof
+    function canopy(cx2, cy) {
+      R(g, cx2 - 26, cy, 52, 22, "#2f7e33"); R(g, cx2 - 18, cy - 10, 36, 12, "#2f7e33");
+      R(g, cx2 - 30, cy + 8, 60, 10, "#2f7e33"); R(g, cx2 - 12, cy - 4, 10, 6, "#4f9e3f");
+    }
+    canopy(158, 56); canopy(210, 96);
+  }
+  function topBG3H(g) {
+    R(g, 0, 0, W, 24, "#101425"); R(g, 0, 22, W, 2, "#3d4a78");
+    for (var i = 0; i < 3; i++) R(g, 8 + i*14, 7, 10, 10, "#e5484d");
+    R(g, 200, 6, 10, 12, "#3fae5a"); R(g, 216, 8, 28, 8, "#e8ecf7");
+  }
+  function topOBJ2(g) { // hero — walks UNDER the tree canopy (BG1H)
+    R(g, 148, 60, 12, 6, "#c9a86a"); R(g, 148, 64, 12, 10, "#f0c8a0");
+    R(g, 146, 74, 16, 12, "#3fae5a"); R(g, 148, 86, 5, 6, "#8a5a33"); R(g, 155, 86, 5, 6, "#8a5a33");
+  }
+  function topOBJ1(g) { // enemy
+    R(g, 58, 154, 18, 12, "#c23b3b"); R(g, 61, 157, 4, 4, "#e8ecf7"); R(g, 69, 157, 4, 4, "#e8ecf7");
+    R(g, 58, 166, 5, 4, "#8f2b2b"); R(g, 71, 166, 5, 4, "#8f2b2b");
+  }
+
+  // ---------- Mode-7 racer scene ----------
+  function raceOBJ2(g, t) { // player car, rear view; exhaust flames flicker
+    g.clearRect(0, 0, W, H);
+    R(g, 104, 152, 48, 22, "#3b56c2"); R(g, 112, 144, 32, 12, "#9ecbff");
+    R(g, 98, 166, 12, 14, "#111522"); R(g, 146, 166, 12, 14, "#111522");
+    R(g, 112, 174, 32, 6, "#26398f");
+    var f = Math.floor((t || 0) / 6) % 2;
+    R(g, 118, 180, 6, 5 + f * 3, f ? "#f5c542" : "#e5484d");
+    R(g, 132, 180, 6, 5 + (1 - f) * 3, f ? "#e5484d" : "#f5c542");
+  }
+  function raceOBJ3(g) { // rival ahead — smaller sprite fakes the distance
+    R(g, 148, 118, 26, 12, "#c23b3b"); R(g, 152, 112, 16, 8, "#f0b8b8");
+    R(g, 144, 126, 7, 8, "#111522"); R(g, 170, 126, 7, 8, "#111522");
+  }
+
+  // ---------- Mode-3 title screen scene ----------
+  function titleBG2L(g) {
+    R(g, 0, 0, W, H, "#0d1030");
+    var pts = [[12,20],[40,60],[70,14],[95,90],[130,30],[160,70],[190,18],[220,50],[240,100],[30,130],[80,160],[140,140],[200,170],[240,200],[20,190],[110,205],[170,196],[60,40],[210,120],[100,52]];
+    pts.forEach(function (p, i) { R(g, p[0], p[1], 2, 2, i % 3 ? "#cdd7ff" : "#7b8fd0"); });
+  }
+  function titleBG1L(g) {
+    var grad = ["#1c2c8f", "#2438a0", "#3040b4", "#3c48c8", "#5048c8", "#6448c0", "#7848b8", "#8c48b0"];
+    for (var i = 0; i < 8; i++) R(g, 40, 48 + i * 8, 176, 8, grad[i]);
+    R(g, 38, 46, 180, 2, "#cdd7ff"); R(g, 38, 112, 180, 2, "#cdd7ff");
+    R(g, 38, 46, 2, 68, "#cdd7ff"); R(g, 216, 46, 2, 68, "#cdd7ff");
+    g.fillStyle = "#0d1030"; g.font = "700 40px Consolas, monospace"; g.fillText("SNES", 68, 94);
+    g.fillStyle = "#ffffff"; g.fillText("SNES", 66, 92);
+    g.fillStyle = "#cdd7ff"; g.font = "700 11px Consolas, monospace";
+    g.fillText("HARDWARE INSPECTOR", 66, 106);
+  }
+  function titleOBJ3(g, t) { // sparkles twinkle on the logo
+    g.clearRect(0, 0, W, H);
+    [[52, 56], [204, 66], [92, 118]].forEach(function (p, i) {
+      var big = Math.floor(((t || 0) + i * 8) / 12) % 2;
+      if (big) { R(g, p[0] - 4, p[1], 10, 2, "#ffffff"); R(g, p[0], p[1] - 4, 2, 10, "#ffffff"); }
+      else R(g, p[0], p[1], 2, 2, "#cdd7ff");
+    });
+  }
+  function titleOBJ0(g, t) { // blinking PRESS START
+    g.clearRect(0, 0, W, H);
+    if (Math.floor((t || 0) / 25) % 2) return;
+    g.fillStyle = "#e8ecf7"; g.font = "700 14px Consolas, monospace";
+    g.fillText("PRESS START", 82, 172);
+  }
+
+  // ---------- Mode-0 puzzle scene (4 layers at once) ----------
+  function puzzBG1L(g) { // playfield well + settled pieces
+    R(g, 40, 24, 96, 184, "#6f6b88"); R(g, 48, 24, 80, 176, "#171b26");
+    var cols = ["#7b6cff", "#4fc3f7", "#66bb6a", "#ffb74d"];
+    var stack = [[0,10,0],[1,10,1],[2,10,3],[4,10,2],[0,9,2],[1,9,2],[4,9,0],[2,8,1]];
+    stack.forEach(function (s) {
+      R(g, 48 + s[0]*16, 24 + s[1]*16, 16, 16, cols[s[2]]);
+      R(g, 48 + s[0]*16 + 2, 24 + s[1]*16 + 2, 4, 4, "#ffffff");
+    });
+  }
+  function puzzBG2L(g) { // NEXT + score panels
+    R(g, 152, 24, 84, 96, "#6f6b88"); R(g, 158, 30, 72, 84, "#171b26");
+    g.fillStyle = "#e8ecf7"; g.font = "700 12px Consolas, monospace"; g.fillText("NEXT", 178, 46);
+    R(g, 178, 56, 16, 16, "#f06292"); R(g, 194, 56, 16, 16, "#f06292"); R(g, 178, 72, 16, 16, "#f06292");
+    R(g, 152, 136, 84, 44, "#6f6b88"); R(g, 158, 142, 72, 32, "#171b26");
+    g.fillText("SCORE", 172, 156); R(g, 166, 162, 56, 8, "#e8ecf7");
+  }
+  function puzzBG3L(g) { // mid deco: drifting bubbles
+    g.strokeStyle = "#4fc3f7"; g.lineWidth = 2;
+    [[20, 60, 8], [232, 90, 11], [14, 170, 6], [244, 190, 8], [26, 120, 5]].forEach(function (b) {
+      g.beginPath(); g.arc(b[0], b[1], b[2], 0, 7); g.stroke();
+    });
+  }
+  function puzzBG4L(g) { // far deco: dim checker
+    for (var y = 0; y < H; y += 32) for (var x = 0; x < W; x += 32)
+      if (((x + y) / 32) % 2) R(g, x, y, 32, 32, "#141928");
+  }
+  function puzzOBJ2(g, t) { // the falling piece
+    g.clearRect(0, 0, W, H);
+    var y = 28 + Math.floor(((t || 0) * 0.35) % 140 / 16) * 16;
+    R(g, 64, y, 16, 16, "#f06292"); R(g, 80, y, 16, 16, "#f06292");
+    R(g, 66, y + 2, 4, 4, "#ffffff"); R(g, 82, y + 2, 4, 4, "#ffffff");
+  }
+
+  // ---------- scenes: what the modes were actually used for ----------
+  var SCENES = {
+    plat: {
+      label: { en: "Jump'n'Run", de: "Jump'n'Run" }, mode: 1, bg3prio: true, modes: [1, 2],
+      draw: { BD: drawBD, BG3L: drawBG3L, BG3H: drawBG3H, BG2L: drawBG2L, BG1L: drawBG1L, BG1H: drawBG1H, OBJ3: drawOBJ3, OBJ2: drawOBJ2, OBJ0: drawOBJ0, BG4L: drawBG4L },
+      anim: { OBJ3: drawOBJ3, OBJ0: drawOBJ0 },
+      notes: {
+        BG1H: { en: "foreground arch (hero walks behind it)", de: "Vordergrund-Bogen (Held läuft dahinter)" },
+        BG1L: { en: "ground & platforms", de: "Boden & Plattformen" },
+        BG2L: { en: "mountains & sun", de: "Berge & Sonne" },
+        BG3H: { en: "HUD / status bar", de: "HUD / Statusleiste" },
+        BG3L: { en: "distant clouds", de: "ferne Wolken" },
+        BG4L: { en: "stars & moon (Mode 0 only)", de: "Sterne & Mond (nur Mode 0)" },
+        OBJ3: { en: "birds", de: "Vögel" }, OBJ2: { en: "hero", de: "Held" },
+        OBJ0: { en: "coin (in front of clouds, behind mountains!)", de: "Münze (vor den Wolken, hinter den Bergen!)" },
+        BD: { en: "sky color", de: "Himmelsfarbe" }
+      }
+    },
+    top: {
+      label: { en: "Top-Down-RPG", de: "Top-Down-RPG" }, mode: 1, bg3prio: true, modes: [1],
+      draw: { BD: drawBD, BG2L: topBG2L, BG1L: topBG1L, BG1H: topBG1H, BG3H: topBG3H, OBJ2: topOBJ2, OBJ1: topOBJ1 },
+      speeds: { BG2L: 1, BG1L: 1, BG1H: 1 },
+      notes: {
+        BG2L: { en: "ground: grass, paths, pond (ALttP-style)", de: "Boden: Gras, Wege, Teich (ALttP-Stil)" },
+        BG1L: { en: "objects: house, trunks, fence", de: "Objekte: Haus, Stämme, Zaun" },
+        BG1H: { en: "tree canopies & roof — the hero walks UNDER them", de: "Baumkronen & Dach — der Held läuft DARUNTER durch" },
+        BG3H: { en: "HUD: hearts & rupees", de: "HUD: Herzen & Rubine" },
+        OBJ2: { en: "hero (half hidden by the canopy!)", de: "Held (halb von der Baumkrone verdeckt!)" },
+        OBJ1: { en: "enemy", de: "Gegner" },
+        BD: { en: "backdrop (invisible under the full ground layer)", de: "Backdrop (unter der vollflächigen Boden-Ebene unsichtbar)" }
+      }
+    },
+    race: {
+      label: { en: "Mode-7-Racer", de: "Mode-7-Racer" }, mode: 7, bg3prio: false, modes: [7],
+      draw: { BD: drawBD, OBJ2: raceOBJ2, OBJ3: raceOBJ3 },
+      anim: { OBJ2: raceOBJ2 },
+      notes: {
+        BG1L: { en: "the track: one Mode-7 layer, perspective via HDMA on M7A–D", de: "die Strecke: eine Mode-7-Ebene, Perspektive per HDMA auf M7A–D" },
+        OBJ2: { en: "your racer (flames animated)", de: "dein Racer (Flammen animiert)" },
+        OBJ3: { en: "rival 'ahead' — smaller sprite fakes the distance", de: "Rivale 'weiter vorn' — kleineres Sprite fakt die Entfernung" },
+        BD: { en: "sky above the Mode-7 horizon ('screen over')", de: "Himmel über dem Mode-7-Horizont ('Screen Over')" }
+      }
+    },
+    title: {
+      label: { en: "Title (Mode 3)", de: "Titelbild (Mode 3)" }, mode: 3, bg3prio: false, modes: [3, 4],
+      draw: { BD: drawBD, BG2L: titleBG2L, BG1L: titleBG1L, OBJ3: titleOBJ3, OBJ0: titleOBJ0 },
+      anim: { OBJ3: titleOBJ3, OBJ0: titleOBJ0 },
+      speeds: { BG1L: 0, BG2L: 0.15 },
+      notes: {
+        BG1L: { en: "the logo: 8bpp = 256 colors for smooth gradients", de: "das Logo: 8bpp = 256 Farben für weiche Verläufe" },
+        BG2L: { en: "4bpp starfield drifting behind", de: "4bpp-Sternenhimmel driftet dahinter" },
+        OBJ3: { en: "sparkles (twinkling)", de: "Funkel-Sprites (glitzern)" },
+        OBJ0: { en: "blinking PRESS START", de: "blinkendes PRESS START" },
+        BD: { en: "deep-space backdrop", de: "Weltraum-Backdrop" }
+      }
+    },
+    puzz: {
+      label: { en: "Puzzle (Mode 0)", de: "Puzzle (Mode 0)" }, mode: 0, bg3prio: false, modes: [0, 1],
+      draw: { BD: drawBD, BG1L: puzzBG1L, BG2L: puzzBG2L, BG3L: puzzBG3L, BG4L: puzzBG4L, OBJ2: puzzOBJ2 },
+      anim: { OBJ2: puzzOBJ2 },
+      speeds: { BG1L: 0, BG2L: 0, BG3L: 0.35, BG4L: 0.12 },
+      notes: {
+        BG1L: { en: "playfield well + settled pieces", de: "Spielfeld-Schacht + abgelegte Steine" },
+        BG2L: { en: "NEXT & score panels", de: "NEXT- & Score-Panels" },
+        BG3L: { en: "deco bubbles, slow parallax", de: "Deko-Blasen, langsames Parallax" },
+        BG4L: { en: "far deco checker — 4 layers at once is Mode 0's whole point", de: "fernes Deko-Karo — 4 Ebenen gleichzeitig ist der ganze Sinn von Mode 0" },
+        OBJ2: { en: "the falling piece", de: "der fallende Stein" },
+        BD: { en: "backdrop", de: "Backdrop" }
+      }
+    }
+  };
+  var SCENE_ORDER = ["plat", "top", "race", "title", "puzz"];
 
   // ---------- setup-mode placeholder textures ----------
   function truncate(g, s, maxW) {
@@ -244,9 +442,12 @@
 
   // ---------- state ----------
   var st = { src: localStorage.getItem("snesLayersSource") || "demo",
+             scene: SCENES[localStorage.getItem("snesLayersScene")] ? localStorage.getItem("snesLayersScene") : "plat",
              mode: 1, bg3prio: true, extbg: false,
              anim: localStorage.getItem("snesLayersAnim") !== "0",
              tm: { BG1: true, BG2: true, BG3: true, BG4: true, OBJ: true } };
+  st.mode = SCENES[st.scene].mode;
+  st.bg3prio = SCENES[st.scene].bg3prio;
   var canvases = {};
 
   // ---------- setup-source helpers ----------
@@ -312,12 +513,16 @@
       });
       return;
     }
-    Object.keys(DRAW).forEach(function (slot) {
+    var scene = SCENES[st.scene];
+    Object.keys(scene.draw).forEach(function (slot) {
       var c = mk();
       if (slot === "BG1L" && st.mode === 7) drawM7(cx(c), 0);
-      else DRAW[slot](cx(c));
+      else scene.draw[slot](cx(c), 0);
       canvases[slot] = c;
     });
+    if (st.mode === 7 && !canvases.BG1L) {           // Mode 7 always has its floor
+      var m7 = mk(); drawM7(cx(m7), 0); canvases.BG1L = m7;
+    }
   }
   function planeVisibleSetup(slot) {
     var meta = SLOTS[slot];
@@ -337,8 +542,17 @@
     var meta = SLOTS[slot], fam = meta.fam;
     if (st.src === "setup") return setupAssigned(fam) ? "on" : "empty";
     if (fam !== "BD" && !st.tm[fam]) return "off";
-    if (!canvases[slot] || !meta.content) return "empty";
+    if (!canvases[slot]) return "empty";
     return "on";
+  }
+  function sceneNote(slot) {
+    var n = SCENES[st.scene].notes[slot];
+    return n ? L(n) : "";
+  }
+  function sceneSpeed(slot) {
+    var sp = SCENES[st.scene].speeds;
+    if (sp && sp[slot] != null) return sp[slot];
+    return SPEED[slot] || 0;
   }
   function tmValue() {
     var v = 0;
@@ -362,9 +576,18 @@
       '<button class="modebtn src' + (setup ? "" : " active") + '" data-src="demo">' + esc(L(T.srcDemo)) + "</button>" +
       '<button class="modebtn src' + (setup ? " active" : "") + '" data-src="setup">' + esc(L(T.srcSetup)) + "</button>";
 
-    var modeBtns = "";
-    for (var m = 0; m <= 7; m++)
-      modeBtns += '<button class="modebtn' + (m === st.mode ? " active" : "") + '" data-mode="' + m + '">' + m + "</button>";
+    // demo mode: only the modes that make sense for the chosen scenario (best practice);
+    // setup mode: all 8, it's YOUR plan.
+    var allowedModes = setup ? [0,1,2,3,4,5,6,7] : SCENES[st.scene].modes;
+    var modeBtns = allowedModes.map(function (m) {
+      return '<button class="modebtn' + (m === st.mode ? " active" : "") + '" data-mode="' + m + '">' + m + "</button>";
+    }).join("");
+
+    var sceneBtns = setup ? "" :
+      '<div class="lv-row"><span class="lv-lbl">' + esc(L(T.sceneLbl)) + "</span>" +
+      SCENE_ORDER.map(function (id) {
+        return '<button class="modebtn src' + (id === st.scene ? " active" : "") + '" data-scene="' + id + '">' + esc(L(SCENES[id].label)) + "</button>";
+      }).join("") + "</div>";
 
     var famChecks = setup ? "" : ["BG1","BG2","BG3","BG4","OBJ"].map(function (f) {
       var dis = !famVisibleInMode(f);
@@ -378,6 +601,7 @@
     host.innerHTML =
       '<div class="hero"><h1>' + esc(L(T.title)) + "</h1><p>" + esc(L(setup ? T.introSetup : T.intro)) + "</p></div>" +
       '<div class="lv-controls">' +
+        sceneBtns +
         '<div class="lv-row">' + srcBtns + '<span style="flex:0 0 12px"></span><span class="lv-lbl">' + esc(L(T.mode)) + "</span>" + modeBtns +
           '<label class="lv-toggle" id="bg3p-wrap"><input type="checkbox" id="bg3p"' + (st.bg3prio ? " checked" : "") + ">" + esc(L(T.bg3p)) + "</label>" +
           (setup ? "" :
@@ -397,10 +621,23 @@
           '<h2 class="sec">' + esc(L(T.ladder)) + '</h2><div class="ladder" id="ladder"></div></div>' +
       "</div>";
 
-    host.querySelectorAll(".modebtn.src").forEach(function (b) {
+    host.querySelectorAll(".modebtn.src[data-src]").forEach(function (b) {
       b.onclick = function () {
         st.src = b.dataset.src;
         localStorage.setItem("snesLayersSource", st.src);
+        if (st.src === "demo" && SCENES[st.scene].modes.indexOf(st.mode) < 0) {
+          st.mode = SCENES[st.scene].mode;
+          st.bg3prio = SCENES[st.scene].bg3prio;
+        }
+        render(host);
+      };
+    });
+    host.querySelectorAll(".modebtn.src[data-scene]").forEach(function (b) {
+      b.onclick = function () {
+        st.scene = b.dataset.scene;
+        localStorage.setItem("snesLayersScene", st.scene);
+        st.mode = SCENES[st.scene].mode;
+        st.bg3prio = SCENES[st.scene].bg3prio;
         render(host);
       };
     });
@@ -436,7 +673,8 @@
     host.querySelector("#modenote").innerHTML =
       "<b>Mode " + st.mode + "</b> — " + esc(L(MODE_NOTES[st.mode])) +
       '<span class="procon"><span class="pro">✓ ' + esc(L(pc.pro)) + '</span>' +
-      '<span class="con">✗ ' + esc(L(pc.con)) + "</span></span>";
+      '<span class="con">✗ ' + esc(L(pc.con)) + "</span></span>" +
+      '<span class="mode-uses">🎮 ' + esc(L(MODE_USES[st.mode])) + "</span>";
 
     var regs;
     if (setup && P()) {
@@ -481,9 +719,10 @@
         note = state === "on" ? "· " + esc(setupNote(meta.fam))
              : '<i>· <a href="#/planner">' + esc(L(T.fillSlot)) + "</a></i>";
       } else {
+        var sn = sceneNote(slot);
         note = state === "off" ? "<i>· " + esc(L(T.off)) + "</i>"
              : state === "empty" ? "<i>· " + esc(L(T.empty)) + "</i>"
-             : meta.content ? "· " + esc(L(meta.content)) : "";
+             : sn ? "· " + esc(sn) : "";
       }
       var bppTag = "";
       if (meta.fam.indexOf("BG") === 0) {
@@ -529,9 +768,11 @@
     if (!cvs) return false;
     var g = cx(cvs);
     g.clearRect(0, 0, W, H);
-    if (st.anim) {                                  // living sprites
-      if (canvases.OBJ3) drawOBJ3(cx(canvases.OBJ3), t);
-      if (canvases.OBJ0) drawOBJ0(cx(canvases.OBJ0), t);
+    if (st.anim && st.src !== "setup") {            // living sprites, per scene
+      var an = SCENES[st.scene].anim || {};
+      Object.keys(an).forEach(function (slot) {
+        if (canvases[slot]) an[slot](cx(canvases[slot]), t);
+      });
     }
     var ladder = ladderFor(st.mode, st.bg3prio, st.extbg).slice().reverse();
     ladder.forEach(function (slot) {
@@ -542,7 +783,7 @@
         g.drawImage(c, 0, 0);
         return;
       }
-      var off = st.anim ? Math.floor((t * (SPEED[slot] || 0)) % W) : 0;
+      var off = st.anim ? Math.floor((t * sceneSpeed(slot)) % W) : 0;
       if (off === 0) { g.drawImage(c, 0, 0); }
       else { g.drawImage(c, -off, 0); g.drawImage(c, W - off, 0); }
     });

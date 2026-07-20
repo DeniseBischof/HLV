@@ -1,7 +1,7 @@
 // SNES Inspector — core data: groups, hardware limits, UI strings.
 // All human-readable text is bilingual: { en: "...", de: "..." }.
 window.SNES = {
-  meta: { id: "snes", name: "SNES", features: { layers: true, planner: true } },
+  meta: { id: "snes", name: "SNES", features: { layers: true, planner: true, memmap: true } },
   registers: [],   // filled by data-regs-*.js
   groups: [
     { id: "display",   name: { en: "Display Control",        de: "Display-Steuerung" } },
@@ -160,6 +160,7 @@ window.SNES = {
     nav_overview: { en: "Overview", de: "Übersicht" },
     nav_layers:   { en: "Layer view", de: "Layer-Ansicht" },
     nav_planner:  { en: "Setup planner", de: "Setup-Planer" },
+    nav_memory:   { en: "Memory map", de: "Speicher-Karte" },
     nav_limits:   { en: "Hardware limits", de: "Hardware-Limits" },
     search_ph:    { en: "Search registers… (name, $addr, keyword)", de: "Register suchen… (Name, $Adresse, Stichwort)" },
     sim_title:    { en: "Value simulator — what am I sending?", de: "Wert-Simulator — was sende ich gerade?" },

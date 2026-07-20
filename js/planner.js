@@ -517,6 +517,7 @@
     render: render,
     getState: function () { return st; },
     update: function (fn) { fn(st); save(); },
-    regWrites: regWrites
+    regWrites: regWrites,
+    blocks: blocks
   };
 })();

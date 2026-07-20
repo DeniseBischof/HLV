@@ -71,8 +71,10 @@
   function applyFeatureNav() {
     var la = document.querySelector('.topnav a[href="#/layers"]');
     var pl = document.querySelector('.topnav a[href="#/planner"]');
+    var mm = document.querySelector('.topnav a[href="#/memory"]');
     if (la) la.style.display = S.meta.features.layers ? "" : "none";
     if (pl) pl.style.display = S.meta.features.planner ? "" : "none";
+    if (mm) mm.style.display = S.meta.features.memmap ? "" : "none";
   }
   function setSystem(id) {
     var next = SYSTEMS.filter(function (s) { return s.meta.id === id; })[0];
@@ -85,6 +87,7 @@
     var h = location.hash;
     if ((h.indexOf("#/layers") === 0 && !S.meta.features.layers) ||
         (h.indexOf("#/planner") === 0 && !S.meta.features.planner) ||
+        (h.indexOf("#/memory") === 0 && !S.meta.features.memmap) ||
         (h.indexOf("#/reg/") === 0 && !regByAddr(currentAddr()))) {
       location.hash = "#/";
     }
@@ -154,6 +157,7 @@
       renderSidebar(); return;
     }
     if (h === "#/planner" && S.meta.features.planner) { window.SNESPlanner.render(el("main")); renderSidebar(); return; }
+    if (h === "#/memory" && S.meta.features.memmap) { window.SNESMemMap.render(el("main")); renderSidebar(); return; }
     if (h === "#/limits") { renderLimits(); renderSidebar(); return; }
     renderOverview(); renderSidebar();
   }
