@@ -203,6 +203,42 @@
     R(g, 73, y+6, 4, 4, 3); R(g, 83, y+6, 4, 4, 3); R(g, 74, y+15, 12, 3, 3); // smiley enemy
   }
 
+  // --- RPG battle (Pokémon Gen-1 style): monsters & HP bars are BACKGROUND tiles! ---
+  function box(g, x, y, w, h) { R(g, x, y, w, h, 0); g.strokeStyle = SH[3]; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, w - 2, h - 2); }
+  function bgPoke(g) {
+    R(g, 0, 0, W, H, 0);
+    for (var i = 0; i < W; i += 8) R(g, i, 2, 4, 2, 2);                  // top divider dots
+    // enemy: platform + creature (top-right)
+    R(g, 100, 44, 52, 6, 1); R(g, 106, 40, 40, 4, 1);
+    R(g, 112, 22, 28, 22, 3); R(g, 116, 27, 6, 6, 0); R(g, 130, 27, 6, 6, 0);
+    R(g, 118, 29, 2, 2, 3); R(g, 132, 29, 2, 2, 3); R(g, 120, 37, 12, 3, 0);
+    // player: platform + creature back view (bottom-left)
+    R(g, 6, 104, 60, 6, 1); R(g, 12, 100, 48, 4, 1);
+    R(g, 18, 74, 40, 30, 3); R(g, 24, 80, 28, 6, 2); R(g, 20, 68, 8, 8, 3); R(g, 48, 68, 8, 8, 3);
+    // enemy HP box (top-left)
+    box(g, 4, 6, 78, 24); g.fillStyle = SH[3]; g.font = "700 9px Consolas, monospace";
+    g.fillText("GLOOM", 9, 17); g.fillText(":L18", 52, 17);
+    R(g, 9, 21, 66, 4, 2); R(g, 9, 21, 40, 4, 3);                       // HP bar (enemy)
+    // player HP box (bottom-right)
+    box(g, 82, 76, 74, 28); g.fillText("BULBA", 88, 87); g.fillText(":L20", 128, 87);
+    R(g, 88, 90, 60, 4, 2); R(g, 88, 90, 46, 4, 3);                     // HP bar (player)
+    g.font = "700 8px Consolas, monospace"; g.fillText("42/58", 118, 101);
+  }
+  function winPoke(g) {
+    box(g, 0, 112, W, 32);                                              // the text/command window
+    g.fillStyle = SH[3]; g.font = "700 10px Consolas, monospace";
+    g.fillText("What will", 10, 126); g.fillText("BULBA do?", 10, 138);
+    box(g, 92, 112, 68, 32);
+    g.fillText("FIGHT", 108, 126); g.fillText("ITEM", 138, 126);
+    g.fillText("PKMN", 108, 138); g.fillText("RUN", 138, 138);
+  }
+  function objPoke(g, t) {                                              // the ONLY sprite: blinking menu cursor
+    g.clearRect(0, 0, W, H);
+    if (Math.floor((t || 0) / 22) % 2) return;
+    g.fillStyle = SH[3]; g.font = "700 10px Consolas, monospace";
+    g.fillText("▶", 99, 126);
+  }
+
   // ---------- scenarios ----------
   var SCEN = {
     plat: {
@@ -223,6 +259,31 @@
         "         | LCDCF_WINON | LCDCF_WIN9C00;  // HUD on 2nd tilemap",
         "// window quirk: it always reaches the BOTTOM of the screen —",
         "// that's why GB HUDs live at the bottom (or need an LYC trick)."
+      ].join("\n")
+    },
+    poke: {
+      name: { en: "RPG battle (Pokémon)", de: "RPG-Kampf (Pokémon)" },
+      how: {
+        en: "The big surprise: in Gen-1 Pokémon the monsters AND the HP bars are drawn as BACKGROUND tiles, not sprites! With only 10 sprites per scanline a large creature would flicker instantly, so the whole static battle scene lives in the BG tilemap. The bottom text box is the window (fixed, never scrolls), and the ONLY sprite on screen is the little blinking menu cursor.",
+        de: "Die große Überraschung: In Gen-1-Pokémon werden die Monster UND die HP-Balken als BACKGROUND-Tiles gezeichnet, nicht als Sprites! Bei nur 10 Sprites pro Scanline würde ein großes Wesen sofort flackern, also lebt die ganze statische Kampfszene in der BG-Tilemap. Die untere Textbox ist das Window (fest, scrollt nie), und das EINZIGE Sprite auf dem Schirm ist der kleine blinkende Menü-Cursor."
+      },
+      draw: { BG: bgPoke, WIN: winPoke, OBJ: objPoke },
+      lcdcBase: 0xF3, hasWin: true, still: true, objAnim: objPoke,
+      notes: {
+        OBJ: { en: "just the blinking menu cursor — sprites are barely used here!", de: "nur der blinkende Menü-Cursor — Sprites werden hier kaum genutzt!" },
+        WIN: { en: "the text & command box — a fixed window overlay", de: "die Text- & Kommandobox — festes Window-Overlay" },
+        BG: { en: "the WHOLE battle: both monsters + HP bars are background tiles (dodging the 10-sprites-per-line limit)", de: "der GANZE Kampf: beide Monster + HP-Balken sind Background-Tiles (umgeht das 10-Sprites-pro-Zeile-Limit)" }
+      },
+      chips: [["WY", 112, 0xFF4A], ["WX", 7, 0xFF4B]],
+      code: [
+        "// GBDK — Pokémon-style battle: the scene is BACKGROUND, not sprites.",
+        "// draw both monsters + HP bars straight into the BG tilemap:",
+        "set_bkg_tiles(12, 2, 4, 3, enemy_mon);   // enemy, top-right",
+        "set_bkg_tiles(2, 9, 5, 4, player_mon);   // player, bottom-left",
+        "// the text box is the window, pinned to the bottom:",
+        "WY_REG = 112;  WX_REG = 7;",
+        "// only ONE sprite: the menu cursor (why? 10-per-line limit).",
+        "move_sprite(0, cursor_x, cursor_y);"
       ].join("\n")
     },
     top: {
@@ -292,7 +353,7 @@
       ].join("\n")
     }
   };
-  var SCEN_ORDER = ["plat", "top", "par", "face"];
+  var SCEN_ORDER = ["plat", "top", "poke", "par", "face"];
 
   // ---------- state ----------
   var st = {
@@ -448,7 +509,7 @@
     if (slotShown("BG")) {
       if (sc.parallax) {
         parCanvases.forEach(function (c, i) { wrapX(g, c, t * PAR_BANDS[i].speed); });
-      } else if (sc.faceball) {
+      } else if (sc.faceball || sc.still) {
         g.drawImage(canvases.BG, 0, 0);
       } else if (st.scen === "top") {
         wrapXY(g, canvases.BG, t * 0.5, t * 0.35);
@@ -457,7 +518,10 @@
       }
     }
     if (slotShown("WIN") && canvases.WIN) g.drawImage(canvases.WIN, 0, 0);
-    if (slotShown("OBJ")) g.drawImage(canvases.OBJ, 0, 0);
+    if (slotShown("OBJ")) {
+      if (sc.objAnim && st.anim) sc.objAnim(cx(canvases.OBJ), t);   // e.g. blinking cursor
+      g.drawImage(canvases.OBJ, 0, 0);
+    }
     return true;
   }
 

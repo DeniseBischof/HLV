@@ -1,6 +1,4 @@
-# Old Gaming-Hardware Inspector
-
-https://denisebischof.github.io/HLV/
+# SNES Inspector
 
 Interactive retro-hardware register reference & value simulator. Static site — no build step, no dependencies. Ships with two systems, switchable via tabs: **SNES** (complete: PPU, WRAM port, DMA/HDMA, APU ports, CPU I/O, joypads) and **Game Boy** (LCD, scrolling/window, palettes, OAM DMA, timer, interrupts, joypad).
 

@@ -331,6 +331,58 @@
     R(g, 66, y + 2, 4, 4, "#ffffff"); R(g, 82, y + 2, 4, 4, "#ffffff");
   }
 
+  // EXTBG demo: the second Mode-7 plane as an overhead finish gantry (per-pixel priority)
+  function raceBG2H(g) {
+    R(g, 36, 22, 184, 12, "#e8ecf7");                                   // banner bar
+    for (var x = 38; x < 218; x += 12) R(g, x, 24, 6, 8, "#111522");    // chequered
+    R(g, 34, 18, 10, 60, "#8f8ba8"); R(g, 212, 18, 10, 60, "#8f8ba8");  // posts
+    g.fillStyle = "#c23b3b"; g.font = "700 10px Consolas, monospace";
+    g.fillText("FINISH", 108, 32);
+  }
+
+  // ---------- RPG battle scene (Mode 1, Final Fantasy / Pokémon style) ----------
+  function battleBG2L(g) {                                              // backdrop art (BG2, 4bpp)
+    var sky = ["#241a4e", "#33245f", "#42306f", "#4e3a7e", "#5a4488", "#6a5296"];
+    for (var i = 0; i < 6; i++) R(g, 0, i * 15, W, 15, sky[i]);
+    R(g, 198, 20, 24, 24, "#e8e2c0");                                   // moon
+    for (var x = 0; x < W; x += 2) { var h = 96 + Math.round(Math.sin(x / 24) * 12); R(g, x, h, 2, H - h, "#1c1636"); } // hills
+    R(g, 0, 168, W, 56, "#241d38");                                     // ground
+  }
+  function battleBG1L(g) {                                              // foreground platforms (BG1)
+    R(g, 22, 132, 100, 12, "#4a3e6a"); R(g, 22, 132, 100, 3, "#6a5e8a");    // enemy platform (left)
+    R(g, 150, 158, 92, 12, "#4a3e6a"); R(g, 150, 158, 92, 3, "#6a5e8a");    // party platform (right)
+    R(g, 44, 190, 12, 8, "#1c1630"); R(g, 208, 186, 14, 9, "#1c1630");      // foreground rocks
+  }
+  function battleBG3H(g) {                                              // the blue command/text box (BG3, 2bpp!)
+    R(g, 6, 176, 244, 44, "#0d1748"); g.strokeStyle = "#9ecbff"; g.lineWidth = 2; g.strokeRect(7, 177, 242, 42);
+    g.strokeRect(11, 181, 128, 34);                                    // command sub-box
+    g.fillStyle = "#e8ecf7"; g.font = "700 11px Consolas, monospace";
+    g.fillText("FIGHT", 30, 195); g.fillText("ITEM", 92, 195);
+    g.fillText("MAGIC", 30, 209); g.fillText("RUN", 92, 209);
+    R(g, 18, 188, 6, 6, "#f5c542");                                    // cursor
+    g.fillText("CLOUD  320", 150, 195); g.fillText("BARRET 480", 150, 209);
+  }
+  function battleOBJ3(g, t) {                                          // enemy monster + hit flash (front sprites)
+    g.clearRect(0, 0, W, H);
+    R(g, 40, 84, 64, 48, "#7a3b8f"); R(g, 34, 96, 12, 24, "#7a3b8f"); R(g, 98, 96, 12, 24, "#7a3b8f"); // body + arms
+    R(g, 52, 96, 12, 12, "#f5c542"); R(g, 80, 96, 12, 12, "#f5c542");  // eyes
+    R(g, 56, 96, 5, 5, "#111522"); R(g, 84, 96, 5, 5, "#111522");
+    R(g, 54, 116, 36, 6, "#3a1c48");                                   // mouth
+    if (Math.floor((t || 0) / 5) % 6 === 0) {                          // slash flash
+      g.strokeStyle = "#ffffff"; g.lineWidth = 3;
+      g.beginPath(); g.moveTo(44, 128); g.lineTo(104, 84); g.stroke();
+    }
+  }
+  function battleOBJ2(g, t) {                                          // your party (right), idle bob
+    g.clearRect(0, 0, W, H);
+    var b = Math.round(Math.sin((t || 0) / 12) * 2);
+    function hero(x, y, col) {
+      R(g, x + 3, y, 12, 8, "#f0c8a0"); R(g, x, y + 8, 18, 16, col);
+      R(g, x + 2, y + 24, 6, 6, "#2a2140"); R(g, x + 10, y + 24, 6, 6, "#2a2140");
+    }
+    hero(160, 120 + b, "#3b7ec2"); hero(190, 128 - b, "#c23b3b"); hero(220, 122 + b, "#3fae5a");
+  }
+
   // ---------- scenes: what the modes were actually used for ----------
   var SCENES = {
     plat: {
@@ -365,13 +417,29 @@
     },
     race: {
       label: { en: "Mode-7-Racer", de: "Mode-7-Racer" }, mode: 7, bg3prio: false, modes: [7],
-      draw: { BD: drawBD, OBJ2: raceOBJ2, OBJ3: raceOBJ3 },
+      draw: { BD: drawBD, BG2H: raceBG2H, OBJ2: raceOBJ2, OBJ3: raceOBJ3 },
       anim: { OBJ2: raceOBJ2 },
+      speeds: { BG2H: 0 },   // the finish gantry stays put
       notes: {
         BG1L: { en: "the track: one Mode-7 layer, perspective via HDMA on M7A–D", de: "die Strecke: eine Mode-7-Ebene, Perspektive per HDMA auf M7A–D" },
+        BG2H: { en: "toggle EXTBG! → a second Mode-7 plane (finish gantry) with per-pixel priority", de: "EXTBG anhaken! → eine zweite Mode-7-Ebene (Zielbogen) mit Pro-Pixel-Priorität" },
         OBJ2: { en: "your racer (flames animated)", de: "dein Racer (Flammen animiert)" },
         OBJ3: { en: "rival 'ahead' — smaller sprite fakes the distance", de: "Rivale 'weiter vorn' — kleineres Sprite fakt die Entfernung" },
         BD: { en: "sky above the Mode-7 horizon ('screen over')", de: "Himmel über dem Mode-7-Horizont ('Screen Over')" }
+      }
+    },
+    battle: {
+      label: { en: "RPG battle", de: "RPG-Kampf" }, mode: 1, bg3prio: true, modes: [1],
+      draw: { BD: drawBD, BG2L: battleBG2L, BG1L: battleBG1L, BG3H: battleBG3H, OBJ3: battleOBJ3, OBJ2: battleOBJ2 },
+      anim: { OBJ3: battleOBJ3, OBJ2: battleOBJ2 },
+      speeds: { BG2L: 0, BG1L: 0 },   // a battle scene is static; only the sprites move
+      notes: {
+        BG3H: { en: "the blue command & text box — BG3 in 2bpp; menu text needs only 4 colors, exactly why Mode 1 keeps a 3rd layer (this IS the Final Fantasy battle setup)", de: "die blaue Kommando- & Textbox — BG3 in 2bpp; Menütext braucht nur 4 Farben, genau deshalb hat Mode 1 eine 3. Ebene (DAS ist das Final-Fantasy-Kampf-Setup)" },
+        BG1L: { en: "foreground platforms the fighters stand on", de: "Vordergrund-Plattformen, auf denen die Kämpfer stehen" },
+        BG2L: { en: "battle backdrop art (4bpp = 16 colors)", de: "Kampf-Hintergrund-Artwork (4bpp = 16 Farben)" },
+        OBJ3: { en: "enemy monster + hit flash (a big multi-tile sprite)", de: "Gegner-Monster + Treffer-Blitz (großes Multi-Tile-Sprite)" },
+        OBJ2: { en: "your party — sprites in front of the backdrop", de: "deine Party — Sprites vor dem Hintergrund" },
+        BD: { en: "backdrop color (hidden behind the scene art)", de: "Backdrop-Farbe (hinter dem Szenen-Artwork versteckt)" }
       }
     },
     title: {
@@ -402,7 +470,7 @@
       }
     }
   };
-  var SCENE_ORDER = ["plat", "top", "race", "title", "puzz"];
+  var SCENE_ORDER = ["plat", "top", "battle", "race", "title", "puzz"];
 
   // ---------- setup-mode placeholder textures ----------
   function truncate(g, s, maxW) {

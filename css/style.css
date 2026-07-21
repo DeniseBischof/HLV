@@ -303,7 +303,7 @@ h2.sec {
 }
 .ladder { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
 .ladrow {
-  display: flex; align-items: center; gap: 9px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px 9px;
   padding: 5px 10px; border-radius: 6px; background: var(--bg2);
   font-size: 13px; border: 1px solid transparent;
 }
@@ -313,8 +313,9 @@ h2.sec {
 .laddot { width: 10px; height: 10px; border-radius: 3px; background: var(--fc); flex: none; }
 .ladname { font-weight: 600; white-space: nowrap; }
 .bpptag { font: 600 10.5px var(--mono); color: var(--text-dim); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
-.ladnote { color: var(--text-dim); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ladlinks { margin-left: auto; display: flex; gap: 7px; flex: none; }
+/* note always on its own full-width line under the name → never truncated */
+.ladnote { color: var(--text-dim); font-size: 12.5px; flex: 1 1 100%; order: 5; margin-left: 37px; }
+.ladlinks { margin-left: auto; display: flex; gap: 7px; flex: none; order: 4; flex-wrap: wrap; justify-content: flex-end; }
 .ladlinks a { font: 600 11.5px var(--mono); }
 
 /* ---------- setup planner ---------- */
@@ -444,4 +445,49 @@ h2.sec {
   .main { padding: 20px 16px 60px; }
   .fieldrow { grid-template-columns: 14px 1fr; }
   .fieldrow .field-ctl { grid-column: 2; }
+}
+
+@media (max-width: 720px) {
+  /* top bar wraps into two rows; drop the long tagline */
+  .topbar { flex-wrap: wrap; gap: 10px 14px; padding: 8px 12px; }
+  .brand-sub { display: none; }
+  .sys-tabs { margin-left: auto; order: 2; }
+  .lang-switch { order: 2; }
+  .topnav { order: 3; width: 100%; margin-left: 0; gap: 8px 16px; flex-wrap: wrap; }
+  .topnav a { font-size: 13.5px; }
+
+  /* layer view: stack the two columns, let the demo canvas fill the width */
+  .lv-cols { flex-direction: column; gap: 18px; }
+  .lv-stackcol, .lv-rescol { flex: 1 1 100%; min-width: 0; width: 100%; }
+  .stack { height: 420px; perspective: 900px; }
+  .plane { width: 220px; height: 192px; margin: -96px 0 0 -110px;
+           transform: rotateX(56deg) rotateZ(-34deg)
+                      translateZ(calc((var(--i) - (var(--n) - 1) / 2) * 34px)); }
+  .composite { max-width: 100%; }
+  .lv-controls .lv-row { gap: 8px; }
+
+  /* ladder rows wrap fully on narrow screens */
+  .ladrow { flex-wrap: wrap; }
+  .ladname { white-space: normal; }
+  .ladnote { flex: 1 1 100%; order: 5; }
+  .ladlinks { order: 4; }
+
+  /* register detail: bits & sim breathe */
+  .reg-header h1 { font-size: 22px; }
+  .bitcell .bitval { width: 34px; height: 34px; font-size: 15px; }
+  .hexin { margin-left: 0; }
+  .sim-head { gap: 8px; }
+
+  /* memory map: give the SVG real height and horizontal scroll instead of squish */
+  .mm-pan { overflow: auto; }
+  #mm-svg { width: 1180px; max-width: none; }
+  .mm-journey { height: 150px; }
+
+  /* planner: single column */
+  .pl-cols { flex-direction: column; }
+  .pl-palette { flex: 1 1 100%; }
+  .pl-bottom { flex-direction: column; gap: 16px; }
+
+  .buscards { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 24px; }
 }
